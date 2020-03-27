@@ -1,0 +1,7 @@
+django
+gunicorn
+psycopg2
+python-dotenv
+whitenoise
+pillow
+django-grappelli

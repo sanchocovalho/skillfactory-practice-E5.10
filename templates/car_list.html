@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Каталог автомобилей{% endblock %}
+
+{% block styles %}
+<link type="text/css" href="/static/css/bootstrap.min.css" rel="stylesheet">
+<link type="text/css" href="/static/css/style.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <header class="container-fluid header">
+        <div class="d-flex flex-md-row flex-sm-column flex-column justify-content-between align-items-center">
+            <div class="user-box my-2">
+                <img src="media/icon/logo.png" alt="">
+                {% if user.is_authenticated %}
+                Привет, {{ user.username }}!
+                {% else %}
+                Привет, гость!
+                {% endif %}
+            </div>
+            <form class="form-group d-flex my-2 input-search-box" method="GET" action="{% url 'app:car-list' %}">
+                <input class="input-search" type="text" placeholder="Поиск" aria-label="Search" name="search">
+                <button class="search-btn" type="submit" name="btnSearch">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                Поиск
+                </button>
+            </form>
+            {% if user.is_authenticated %}
+            <form class="form-group d-flex my-2 logout-box" method="POST">
+                {% csrf_token %}
+                <button class="addauto-btn" type="submit" name="btnAddAuto">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                Добавить авто
+                </button>
+                <button class="logout-btn" type="submit" name="btnLogOut">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                Выйти
+                </button>
+            </form>
+            {% else %}
+            <button class="show-login-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            Войти
+            </button>
+            {% endif %}
+        </div>
+    </header>
+    {%if errmsg == 1 %}
+    <div class="container-fluid alert alert-danger alert-dismissible fade show text-center" role="alert">
+        <strong>Неверный логин или пароль. Попробуйте ввести ещё раз!</strong>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <div aria-hidden="true">&times;</div>
+        </button>
+    </div>
+    {% endif %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12 my-3">
+                <div class="row">
+                    {% for car in object_list %}
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                        <div class="card shadow p-1 rounded card-box">
+                            <div class="card-img">
+                            {%if car.photo %}
+                                <img src="{{ car.photo.url }}" class="w-100 h-100 photo" alt="">
+                            {% else %}
+                                <img src="media/photos/default.jpg" class="w-100 h-100 photo" alt="">
+                            {% endif %}
+                            </div>
+                            <div class="card-body card-text">
+                                <h4 class="card-title font-weight-bold">{{ car.manufacturer }}</h4>
+                                <p class="card-title"><span class="font-weight-bold card-span">Модель:</span> {{ car.model }}</p>
+                                <p class="card-title"><span class="font-weight-bold card-span">Год выпуска:</span> {{ car.release_year }}</p>
+                                <p class="card-title"><span class="font-weight-bold card-span">Коробка передач: </span>
+                                {% if car.gearbox == 1 %}
+                                    механика
+                                {% elif car.gearbox == 2 %}
+                                    автомат
+                                {% elif car.gearbox == 3 %}
+                                    робот
+                                {% endif %}
+                                </p>
+                                <p class="card-title"><span class="font-weight-bold card-span">Цвет:</span> {{ car.color }}</p>
+                                {% if user.is_authenticated and user.is_superuser %}
+                                <div class="d-flex flex-row flex-wrap justify-content-between">
+                                    <form action="{% url 'app:car-update' car.id %}">
+                                    <button class="update-btn">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        Изменить
+                                        </button>
+                                    </form>
+                                    <form action="{% url 'app:car-delete' car.id %}">
+                                        <button class="delete-btn">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        Удалить
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                  {% endfor %}
+                </div>
+            </div>  
+        </div>  
+    </div>
+    {% if not user.is_authenticated %}
+    <div class="login-container">
+        <div class="login-box">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <h1>Вход</h1>
+            <form class="login-form" id="login-form" method="POST">
+                {% csrf_token %}
+                <input class="input-box" type="text" name="username" autofocus="" required="" id="id_username" placeholder="Логин">
+                <input class="input-box" type="password" name="password" required="" id="id_password" placeholder="Пароль">
+                <button class="login-btn" type="submit" name="btnLogIn">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                Войти
+                </button>
+                <div class="hide-login-btn"><span>&times;</span></div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block script %}
+    {% if not user.is_authenticated %}
+    <script type="application/javascript" src="/static/js/jquery-3.4.1.min.js"></script>
+    <script type="application/javascript" src="/static/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        function closeLoginWindow(){
+            $(".container-fluid").removeClass('blurred');
+            $("body").css({'overflow':'auto'});
+            $(".container-fluid").css({'pointer-events':'auto'})
+            $(".login-container").fadeOut();
+            $("#login-form")[0].reset();
+        }
+        $(function() {
+            $(document).mouseup(function(e){ // событие клика по веб-документу
+                let div = $(".login-container"); // тут указываем ID элемента
+                if (!div.is(e.target) // если клик был не по нашему блоку
+                        && div.has(e.target).length === 0) { // и не по его дочерним элементам
+                        closeLoginWindow();
+                }
+            });
+        });
+        $(".show-login-btn").on("click",function(){
+            $(".container-fluid").addClass('blurred');
+            $("body").css({'overflow':'hidden'});
+            $(".container-fluid").css({'pointer-events':'none'})
+            $(".login-container").fadeIn();
+        });
+        $(".hide-login-btn").on("click",function(){
+            closeLoginWindow();
+        });
+    </script>
+    {% endif %}
+{% endblock %}
